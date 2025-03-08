@@ -321,3 +321,300 @@ export const generateCombinedIdeas = async (baseIdea: string, selectedVariations
     throw new Error(error.message || 'Failed to generate combined ideas');
   }
 };
+
+interface PitchDeckSlide {
+  id: string;
+  type: string; 
+  title: string;
+  content: {
+    text?: string;
+    bullets?: string[];
+    image?: string;
+  };
+}
+
+interface PitchDeckSuggestion {
+  slideId: string;
+  content: string;
+  type: 'design' | 'content' | 'structure';
+  applied: boolean;
+}
+
+/**
+ * Generates suggestions to improve a pitch deck
+ */
+export const generatePitchDeckSuggestions = async (slides: PitchDeckSlide[]) => {
+  try {
+    // If running in mock mode, return mock data
+    if (import.meta.env.VITE_OPENAI_MOCK === 'true') {
+      return {
+        suggestions: [
+          {
+            slideId: slides[0].id,
+            content: "Make your company name larger and add a compelling tagline that clearly communicates your value proposition.",
+            type: "design" as const,
+            applied: false
+          },
+          {
+            slideId: slides.find(s => s.type === 'problem')?.id || slides[1].id,
+            content: "Quantify the problem with specific market data to establish credibility and urgency.",
+            type: "content" as const,
+            applied: false
+          },
+          {
+            slideId: slides.find(s => s.type === 'solution')?.id || slides[2].id,
+            content: "Show a visual representation of your solution rather than just describing it.",
+            type: "content" as const,
+            applied: false
+          }
+        ],
+        overall_feedback: "Your pitch deck has a good structure but could be more impactful with stronger visual elements and more specific data points. Consider adding competitive differentiation and a clear call to action on the final slide."
+      };
+    }
+
+    // Initialize OpenAI if not running in mock mode
+    const openai = new OpenAI({
+      apiKey: import.meta.env.VITE_OPENAI_API_KEY,
+    });
+
+    // Prepare the prompt
+    const prompt = `
+      Analyze this pitch deck and provide specific, actionable suggestions to improve it.
+      
+      Pitch Deck Slides:
+      ${JSON.stringify(slides, null, 2)}
+      
+      Provide 3-5 specific suggestions for individual slides AND an overall assessment.
+      Each suggestion should include:
+      1. The slide ID it applies to
+      2. The specific suggestion content
+      3. The type of suggestion (design, content, or structure)
+      
+      Format the response as a JSON object with the following structure:
+      {
+        "suggestions": [
+          {
+            "slideId": "slide-id-here",
+            "content": "Detailed suggestion describing what should be improved or changed",
+            "type": "design|content|structure",
+            "applied": false
+          },
+          ...more suggestions...
+        ],
+        "overall_feedback": "Overall assessment of the pitch deck with 2-3 key recommendations"
+      }
+    `;
+
+    // Call OpenAI API
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        {
+          role: "system",
+          content: "You are an expert pitch deck consultant who provides actionable suggestions to improve investor presentations."
+        },
+        {
+          role: "user",
+          content: prompt
+        }
+      ],
+      response_format: { type: "json_object" }
+    });
+
+    // Parse and return the response
+    const content = response.choices[0].message.content;
+    if (!content) {
+      throw new Error("No content returned from OpenAI");
+    }
+    
+    return JSON.parse(content);
+  } catch (error) {
+    console.error("Error generating pitch deck suggestions:", error);
+    throw error;
+  }
+};
+
+// Fix for the TypeScript error in the generatePitchDeck function
+export const generatePitchDeck = async (businessInfo: {
+  companyName: string;
+  tagline: string;
+  problem: string;
+  solution: string;
+  market: string;
+  businessModel: string;
+  competition: string;
+  teamInfo: string;
+  financials: string;
+  askAmount?: string;
+}) => {
+  try {
+    // If running in mock mode, return mock data
+    if (import.meta.env.VITE_OPENAI_MOCK === 'true') {
+      return {
+        slides: [
+          {
+            id: crypto.randomUUID(),
+            type: 'cover',
+            title: businessInfo.companyName,
+            content: {
+              text: businessInfo.tagline
+            }
+          },
+          {
+            id: crypto.randomUUID(),
+            type: 'problem',
+            title: 'The Problem',
+            content: {
+              text: "We've identified a significant market gap",
+              bullets: businessInfo.problem.split('\n').filter(item => item.trim() !== '')
+            }
+          },
+          {
+            id: crypto.randomUUID(),
+            type: 'solution',
+            title: 'Our Solution',
+            content: {
+              text: "Our innovative solution addresses these challenges",
+              bullets: businessInfo.solution.split('\n').filter(item => item.trim() !== '')
+            }
+          },
+          {
+            id: crypto.randomUUID(),
+            type: 'market',
+            title: 'Market Opportunity',
+            content: {
+              text: "The addressable market is substantial and growing",
+              bullets: businessInfo.market.split('\n').filter(item => item.trim() !== '')
+            }
+          },
+          {
+            id: crypto.randomUUID(),
+            type: 'business',
+            title: 'Business Model',
+            content: {
+              text: "Our revenue model is sustainable and scalable",
+              bullets: businessInfo.businessModel.split('\n').filter(item => item.trim() !== '')
+            }
+          },
+          {
+            id: crypto.randomUUID(),
+            type: 'custom',
+            title: 'Competition',
+            content: {
+              text: "Our competitive landscape",
+              bullets: businessInfo.competition.split('\n').filter(item => item.trim() !== '')
+            }
+          },
+          {
+            id: crypto.randomUUID(),
+            type: 'team',
+            title: 'Our Team',
+            content: {
+              text: "A world-class team ready to execute",
+              bullets: businessInfo.teamInfo.split('\n').filter(item => item.trim() !== '')
+            }
+          },
+          {
+            id: crypto.randomUUID(),
+            type: 'custom',
+            title: 'Financials',
+            content: {
+              text: "Our financial projections show strong growth potential",
+              bullets: businessInfo.financials.split('\n').filter(item => item.trim() !== '')
+            }
+          },
+          {
+            id: crypto.randomUUID(),
+            type: 'custom',
+            title: 'Investment Ask',
+            content: {
+              text: `We're seeking ${businessInfo.askAmount || '$X'} to fuel our growth`,
+              bullets: [
+                "Expand our team",
+                "Accelerate product development",
+                "Scale marketing efforts"
+              ]
+            }
+          }
+        ]
+      };
+    }
+
+    // Initialize OpenAI if not running in mock mode
+    const openai = new OpenAI({
+      apiKey: import.meta.env.VITE_OPENAI_API_KEY,
+    });
+
+    // Prepare the prompt
+    const prompt = `
+      Create a compelling pitch deck for a startup with the following information:
+      
+      Company Name: ${businessInfo.companyName}
+      Tagline: ${businessInfo.tagline}
+      Problem: ${businessInfo.problem}
+      Solution: ${businessInfo.solution}
+      Market: ${businessInfo.market}
+      Business Model: ${businessInfo.businessModel}
+      Competition: ${businessInfo.competition}
+      Team: ${businessInfo.teamInfo}
+      Financials: ${businessInfo.financials}
+      Investment Ask: ${businessInfo.askAmount || "Not specified"}
+      
+      For each section, provide:
+      1. A compelling headline/title
+      2. A brief summary statement
+      3. 3-5 bullet points that highlight key information
+      
+      Format the response as a JSON object with the following structure:
+      {
+        "slides": [
+          {
+            "id": "unique-id",
+            "type": "cover|problem|solution|market|business|team|custom",
+            "title": "Slide Title",
+            "content": {
+              "text": "Main text for the slide",
+              "bullets": ["Bullet point 1", "Bullet point 2", ...]
+            }
+          },
+          ...more slides...
+        ]
+      }
+    `;
+
+    // Call OpenAI API
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        {
+          role: "system",
+          content: "You are an expert startup pitch deck consultant who creates compelling, investor-ready content."
+        },
+        {
+          role: "user",
+          content: prompt
+        }
+      ],
+      response_format: { type: "json_object" }
+    });
+
+    // Parse and return the response
+    const content = response.choices[0].message.content;
+    if (!content) {
+      throw new Error("No content returned from OpenAI");
+    }
+    
+    const parsedContent = JSON.parse(content);
+    
+    // Ensure each slide has a unique ID if not provided by the AI
+    parsedContent.slides = parsedContent.slides.map((slide: PitchDeckSlide) => ({
+      ...slide,
+      id: slide.id || crypto.randomUUID()
+    }));
+    
+    return parsedContent;
+  } catch (error) {
+    console.error("Error generating pitch deck:", error);
+    throw error;
+  }
+};

@@ -9,7 +9,8 @@ import {
   Library,
   Plus,
   Lightbulb,
-  ArrowRight
+  ArrowRight,
+  Sparkles
 } from 'lucide-react';
 
 export default function IdeaHub() {
@@ -43,8 +44,9 @@ export default function IdeaHub() {
     },
     {
       icon: Rocket,
-      title: 'Pitch Deck',
-      description: 'Create compelling investor presentations.',
+      title: 'AI Pitch Deck Generator',
+      description: 'Create professional investor-ready pitch decks with AI.',
+      isNew: true,
       action: {
         text: 'Create Deck',
         href: '/idea-hub/pitch-deck'
@@ -96,24 +98,27 @@ export default function IdeaHub() {
             <div className="sm:flex sm:items-start sm:justify-between">
               <div className="sm:flex-1">
                 <h2 className="text-xl font-semibold text-white sm:text-2xl">
-                  New: AI-Powered Idea Flow
+                  New: AI-Powered Pitch Deck Generator
                 </h2>
                 <p className="mt-2 text-sm text-indigo-100 sm:text-base">
-                  Take your startup ideas from concept to execution with our new guided workflow.
-                  Get AI feedback at every step and refine your ideas into buildable concepts.
+                  Create professional investor-ready pitch decks in minutes. Our AI analyzes your business 
+                  and generates compelling slides with persuasive content tailored to your startup.
                 </p>
-                <div className="mt-4">
+                <div className="mt-4 sm:mt-6">
                   <Link
-                    to="/idea-hub/refinement"
+                    to="/idea-hub/pitch-deck"
                     className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-indigo-600 bg-white hover:bg-indigo-50"
                   >
-                    Try Idea Flow
-                    <ArrowRight className="ml-2 h-4 w-4" />
+                    <Sparkles className="mr-2 h-5 w-5" />
+                    Try AI Pitch Deck Generator
+                    <ArrowRight className="ml-2 h-5 w-5" />
                   </Link>
                 </div>
               </div>
               <div className="mt-4 sm:mt-0 sm:ml-6">
-                <Lightbulb className="h-12 w-12 text-white opacity-75" />
+                <div className="bg-white/10 p-4 rounded-lg">
+                  <Rocket className="h-16 w-16 text-white" />
+                </div>
               </div>
             </div>
           </div>
@@ -121,30 +126,32 @@ export default function IdeaHub() {
 
         {/* Tools Grid */}
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {tools.map((tool, index) => (
+          {tools.map((tool) => (
             <div
-              key={index}
-              className="bg-white overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow duration-200"
+              key={tool.title}
+              className="relative bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200"
             >
-              <div className="p-5">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <tool.icon className="h-6 w-6 text-indigo-600" />
-                  </div>
-                  <div className="ml-4">
-                    <h3 className="text-lg font-medium text-gray-900">{tool.title}</h3>
-                    <p className="mt-1 text-sm text-gray-500">{tool.description}</p>
-                  </div>
+              {tool.isNew && (
+                <div className="absolute top-4 right-4">
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                    <Sparkles className="h-3 w-3 mr-1" />
+                    New
+                  </span>
                 </div>
-                <div className="mt-4">
-                  <Link
-                    to={tool.action.href}
-                    className="inline-flex items-center text-sm font-medium text-indigo-600 hover:text-indigo-900"
-                  >
-                    {tool.action.text}
-                    <ArrowRight className="ml-1 h-4 w-4" />
-                  </Link>
+              )}
+              <div className="p-6">
+                <div className="flex justify-center items-center w-12 h-12 rounded-full bg-indigo-100 text-indigo-600 mb-4">
+                  <tool.icon className="h-6 w-6" />
                 </div>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">{tool.title}</h3>
+                <p className="text-sm text-gray-500 mb-4 h-12">{tool.description}</p>
+                <Link
+                  to={tool.action.href}
+                  className="inline-flex items-center text-sm font-medium text-indigo-600 hover:text-indigo-500"
+                >
+                  {tool.action.text}
+                  <ArrowRight className="ml-1 h-4 w-4" />
+                </Link>
               </div>
             </div>
           ))}
